@@ -1,0 +1,16 @@
+Test 1: Running 'echo Hello from background'...
+Hello from background
+  Success, exit code: 0
+Test 2: Running 'ls -l' or 'dir'...
+total 144
+-rw-r--r-- 1 zavgo zavgo 14140 Jan  8 14:14 CMakeCache.txt
+drwxr-xr-x 7 zavgo zavgo  4096 Jan  8 14:20 CMakeFiles
+-rw-r--r-- 1 zavgo zavgo  6288 Jan  8 14:20 Makefile
+-rw-r--r-- 1 zavgo zavgo  1484 Jan  8 14:13 cmake_install.cmake
+-rw-r--r-- 1 zavgo zavgo 62288 Jan  8 14:14 libbackground_process.a
+-rw-r--r-- 1 zavgo zavgo   196 Jan  8 14:20 output.txt
+-rwxr-xr-x 1 zavgo zavgo 42200 Jan  8 14:20 test_app
+  Success, exit code: 0
+Test 3: Running non-existent command...
+execvp failed: No such file or directory
+  Success, exit code: 1
