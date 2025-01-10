@@ -1,0 +1,42 @@
+sudo apt update
+
+sudo apt install build-essential
+sudo apt install cmake
+
+sudo apt install git
+mkdir hello-world && cd hello-world
+git init
+
+code .
+
+Установить дополнения "C/C++", "CMake", "CMake Tools" в VS code
+
+``` {main.cpp}
+#include <iostream>
+
+int main() {
+    std::cout << "Hello, World!" << std::endl;
+    return 0;
+}
+```
+
+git add main.cpp
+git commit -m "Initial commit"
+
+
+``` {CMakeLists.txt}
+cmake_minimum_required(VERSION 3.10)
+project(HelloWorld)
+
+add_executable(hello_world main2.cpp)
+```
+
+mkrid build && cd build
+cmake ..
+make
+./hello_world
+
+
+git:
+
+git pull origin main || git pull
