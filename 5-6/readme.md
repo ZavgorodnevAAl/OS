@@ -1,4 +1,4 @@
-![result](/result.png)
+![result](/5-6/result.png)
 
 # Запуск сервера
 
