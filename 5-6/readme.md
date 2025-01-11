@@ -1,3 +1,5 @@
+![result](/result.png)
+
 # Запуск сервера
 
 `mkdir build && cd build`
