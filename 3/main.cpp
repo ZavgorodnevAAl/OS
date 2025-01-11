@@ -1,6 +1,6 @@
 #include "counter.h"
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     if (argc < 2) {
         std::cerr << "specify the path to the file" << std::endl;
         return 1;

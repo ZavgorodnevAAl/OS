@@ -4,11 +4,11 @@
 #include <string>
 
 #if defined(_WIN32) || defined(_WIN64)
-    #include <windows.h>
+#include <windows.h>
 #else
-    #include <unistd.h>
-    #include <sys/types.h>
-    #include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #endif
 
 struct ProcessResult {
@@ -21,7 +21,7 @@ public:
     BackgroundProcess();
     ~BackgroundProcess();
 
-    ProcessResult execute(const std::string& command);
+    ProcessResult execute(const std::string &command);
 
 private:
 #if defined(_WIN32) || defined(_WIN64)

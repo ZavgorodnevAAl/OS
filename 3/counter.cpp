@@ -1,7 +1,7 @@
 #include "counter.h"
 #include <fstream>
 
-void saveCounterToFile(const std::string& counterFilePath, std::int64_t counter) {
+void saveCounterToFile(const std::string &counterFilePath, std::int64_t counter) {
     std::ofstream counterFile(counterFilePath);
     if (counterFile.is_open()) {
         counterFile << counter;
@@ -32,7 +32,7 @@ std::uint32_t getProcessId() {
 #endif
 }
 
-bool fileExists(const std::string& filename) {
+bool fileExists(const std::string &filename) {
 #ifdef _WIN32
     return _access(filename.c_str(), 0) != -1;
 #else
@@ -40,27 +40,29 @@ bool fileExists(const std::string& filename) {
 #endif
 }
 
-int lockFile(const std::string& filename) {
+int lockFile(const std::string &filename) {
 #ifdef _WIN32
     HANDLE hFile = CreateFileA(filename.c_str(), GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile == INVALID_HANDLE_VALUE) return -1;
+    if (hFile == INVALID_HANDLE_VALUE)
+        return -1;
 
-    OVERLAPPED ov = { 0 };
+    OVERLAPPED ov = {0};
     if (!LockFileEx(hFile, LOCKFILE_EXCLUSIVE_LOCK | LOCKFILE_FAIL_IMMEDIATELY, 0, MAXDWORD, MAXDWORD, &ov)) {
         CloseHandle(hFile);
         return -1;
     }
-    
+
     return 1;
 #else
     int fd = open(filename.c_str(), O_RDWR | O_CREAT, 0666);
-    if (fd < 0) return -1;
+    if (fd < 0)
+        return -1;
 
     if (flock(fd, LOCK_EX | LOCK_NB) < 0) {
         close(fd);
         return -1;
     }
-    
+
     return 1;
 #endif
 }
@@ -69,7 +71,7 @@ void unlockFile(int fd) {
 #ifdef _WIN32
     if (fd != -1) {
         HANDLE hFile = reinterpret_cast<HANDLE>(fd);
-        OVERLAPPED ov = { 0 };
+        OVERLAPPED ov = {0};
         UnlockFileEx(hFile, 0, MAXDWORD, MAXDWORD, &ov);
         CloseHandle(hFile);
     }
@@ -81,7 +83,7 @@ void unlockFile(int fd) {
 #endif
 }
 
-std::int64_t loadCounterFromFile(const std::string& counterFilePath) {
+std::int64_t loadCounterFromFile(const std::string &counterFilePath) {
     std::int64_t counter = 32;
 
 #ifdef _WIN32
@@ -90,7 +92,7 @@ std::int64_t loadCounterFromFile(const std::string& counterFilePath) {
         return counter;
     }
 
-    OVERLAPPED ov = { 0 };
+    OVERLAPPED ov = {0};
     if (!LockFileEx(hFile, LOCKFILE_EXCLUSIVE_LOCK, 0, MAXDWORD, MAXDWORD, &ov)) {
         CloseHandle(hFile);
         return counter;
@@ -112,7 +114,6 @@ std::int64_t loadCounterFromFile(const std::string& counterFilePath) {
         ss >> counter;
     }
 
-
 #else
     int fd = open(counterFilePath.c_str(), O_RDONLY | O_CREAT, 0666);
     if (fd < 0) {
@@ -128,7 +129,7 @@ std::int64_t loadCounterFromFile(const std::string& counterFilePath) {
 
     close(fd);
     if (bytesRead > 0) {
-       std::stringstream ss(std::string(buffer.begin(), buffer.begin() + bytesRead));
+        std::stringstream ss(std::string(buffer.begin(), buffer.begin() + bytesRead));
         ss >> counter;
     }
 #endif
@@ -136,8 +137,7 @@ std::int64_t loadCounterFromFile(const std::string& counterFilePath) {
     return counter;
 }
 
-
-bool isDataAvailable(std::istream& is) {
+bool isDataAvailable(std::istream &is) {
 #ifdef _WIN32
     HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(stdin));
     DWORD bytesAvailable = 0;
@@ -159,7 +159,7 @@ bool isDataAvailable(std::istream& is) {
 #endif
 }
 
-void leaderProcess(int argc, char* argv[]) {
+void leaderProcess(int argc, char *argv[]) {
     std::string logFilePath = argv[1];
     std::string lockFilePath = logFilePath + ".leader";
     std::string counterFilePath = logFilePath + ".counter";
@@ -180,13 +180,13 @@ void leaderProcess(int argc, char* argv[]) {
 
     if (isLeader) {
         std::thread counterThread([&]() {
-        while (true) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(300));
-            {
-                int64_t counter = loadCounterFromFile(counterFilePath);
-                saveCounterToFile(counterFilePath, ++counter);
+            while (true) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(300));
+                {
+                    int64_t counter = loadCounterFromFile(counterFilePath);
+                    saveCounterToFile(counterFilePath, ++counter);
+                }
             }
-        }
         });
         counterThread.detach();
     }
@@ -194,7 +194,7 @@ void leaderProcess(int argc, char* argv[]) {
     auto lastLogTime = std::chrono::system_clock::now();
     auto lastSpawnTime = std::chrono::system_clock::now();
 
-    while (true) {        
+    while (true) {
         if (!isLeader) {
             int currentLockFileDescriptor = lockFile(lockFilePath);
             bool currentIsLeader = currentLockFileDescriptor != -1;
@@ -206,13 +206,13 @@ void leaderProcess(int argc, char* argv[]) {
                     logFile << generateTimestamp() << " - Process " << pid << " become leader." << std::endl;
 
                     std::thread counterThread([&]() {
-                    while (true) {
-                        std::this_thread::sleep_for(std::chrono::milliseconds(300));
-                        {
-                            int64_t counter = loadCounterFromFile(counterFilePath);
-                            saveCounterToFile(counterFilePath, ++counter);
+                        while (true) {
+                            std::this_thread::sleep_for(std::chrono::milliseconds(300));
+                            {
+                                int64_t counter = loadCounterFromFile(counterFilePath);
+                                saveCounterToFile(counterFilePath, ++counter);
+                            }
                         }
-                    }
                     });
                     counterThread.detach();
                 }
@@ -221,7 +221,7 @@ void leaderProcess(int argc, char* argv[]) {
 
         if (isDataAvailable(std::cin)) {
             std::string input;
-            if(std::getline(std::cin, input)){
+            if (std::getline(std::cin, input)) {
                 if (input == "EXIT") {
                     break;
                 }
@@ -231,7 +231,7 @@ void leaderProcess(int argc, char* argv[]) {
                         saveCounterToFile(counterFilePath, newCounterValue);
                     }
                     logFile << generateTimestamp() << " - Process " << pid << " set counter to: " << newCounterValue << std::endl;
-                } catch (const std::exception& e) {
+                } catch (const std::exception &e) {
                     logFile << generateTimestamp() << " - Process " << pid << " error, invalid input: " << input << std::endl;
                 }
             }
@@ -251,11 +251,11 @@ void leaderProcess(int argc, char* argv[]) {
 
                 if (!child1Running) {
                     child1Running = true;
-                #ifdef _WIN32
-                    STARTUPINFOA si1 = { sizeof(si1) };
+#ifdef _WIN32
+                    STARTUPINFOA si1 = {sizeof(si1)};
                     PROCESS_INFORMATION pi1;
                     std::string commandLine1 = "\"" + std::string(argv[0]) + "\" \"" + logFilePath + "\" child1";
-                    if (CreateProcessA(NULL, (char*)commandLine1.c_str(), NULL, NULL, FALSE, 0, NULL, NULL, &si1, &pi1)) {
+                    if (CreateProcessA(NULL, (char *)commandLine1.c_str(), NULL, NULL, FALSE, 0, NULL, NULL, &si1, &pi1)) {
                         CloseHandle(pi1.hThread);
                         std::thread([&, processHandle = pi1.hProcess]() {
                             WaitForSingleObject(processHandle, INFINITE);
@@ -264,12 +264,12 @@ void leaderProcess(int argc, char* argv[]) {
                                 std::lock_guard<std::mutex> childLockInner(childMutex);
                                 child1Running = false;
                             }
-                            }).detach();
+                        }).detach();
                     } else {
                         logFile << generateTimestamp() << " - Process " << pid << " failed to start child1." << std::endl;
                         child1Running = false;
                     }
-                #else
+#else
                     pid_t childPid1 = fork();
                     if (childPid1 == 0) {
                         std::string commandLine1 = std::string(argv[0]) + " " + logFilePath + " child1";
@@ -281,7 +281,7 @@ void leaderProcess(int argc, char* argv[]) {
                             int status;
                             waitpid(childPid, &status, 0);
                             {
-                            std::lock_guard<std::mutex> childLockInner(childMutex);
+                                std::lock_guard<std::mutex> childLockInner(childMutex);
                                 child1Running = false;
                             }
                         }).detach();
@@ -289,32 +289,32 @@ void leaderProcess(int argc, char* argv[]) {
                         logFile << generateTimestamp() << " - Process " << pid << " failed to start child1." << std::endl;
                         child1Running = false;
                     }
-                #endif
+#endif
                 } else {
                     logFile << generateTimestamp() << " - Process " << pid << " child1 is still running, not spawning a new instance." << std::endl;
                 }
 
                 if (!child2Running) {
-                child2Running = true;
-                #ifdef _WIN32
-                    STARTUPINFOA si2 = { sizeof(si2) };
+                    child2Running = true;
+#ifdef _WIN32
+                    STARTUPINFOA si2 = {sizeof(si2)};
                     PROCESS_INFORMATION pi2;
                     std::string commandLine2 = "\"" + std::string(argv[0]) + "\" \"" + logFilePath + "\" child2";
-                    if (CreateProcessA(NULL, (char*)commandLine2.c_str(), NULL, NULL, FALSE, 0, NULL, NULL, &si2, &pi2)) {
-                    CloseHandle(pi2.hThread);
-                    std::thread([&, processHandle = pi2.hProcess]() {
-                        WaitForSingleObject(processHandle, INFINITE);
-                        CloseHandle(processHandle);
-                        {
-                            std::lock_guard<std::mutex> childLockInner(childMutex);
-                            child2Running = false;
-                        }
+                    if (CreateProcessA(NULL, (char *)commandLine2.c_str(), NULL, NULL, FALSE, 0, NULL, NULL, &si2, &pi2)) {
+                        CloseHandle(pi2.hThread);
+                        std::thread([&, processHandle = pi2.hProcess]() {
+                            WaitForSingleObject(processHandle, INFINITE);
+                            CloseHandle(processHandle);
+                            {
+                                std::lock_guard<std::mutex> childLockInner(childMutex);
+                                child2Running = false;
+                            }
                         }).detach();
                     } else {
                         logFile << generateTimestamp() << " - Process " << pid << " failed to start child2." << std::endl;
                         child2Running = false;
                     }
-                #else
+#else
                     pid_t childPid2 = fork();
                     if (childPid2 == 0) {
                         std::string commandLine2 = std::string(argv[0]) + " " + logFilePath + " child2";
@@ -322,27 +322,28 @@ void leaderProcess(int argc, char* argv[]) {
                         logFile << generateTimestamp() << " - Process " << getProcessId() << " failed to start child2." << std::endl;
                         exit(1);
                     } else if (childPid2 > 0) {
-                    std::thread([&, childPid = childPid2]() {
-                        int status;
-                        waitpid(childPid, &status, 0);
-                        {
-                            std::lock_guard<std::mutex> childLockInner(childMutex);
-                            child2Running = false;
-                        }
+                        std::thread([&, childPid = childPid2]() {
+                            int status;
+                            waitpid(childPid, &status, 0);
+                            {
+                                std::lock_guard<std::mutex> childLockInner(childMutex);
+                                child2Running = false;
+                            }
                         }).detach();
                     } else {
                         logFile << generateTimestamp() << " - Process " << pid << " failed to start child2." << std::endl;
                         child2Running = false;
                     }
-                #endif
-            } else {
-                logFile << generateTimestamp() << " - Process " << pid << " child2 is still running, not spawning a new instance." << std::endl;
-            }
-            lastSpawnTime = now;
+#endif
+                } else {
+                    logFile << generateTimestamp() << " - Process " << pid << " child2 is still running, not spawning a new instance." << std::endl;
+                }
+                lastSpawnTime = now;
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        if (std::cin.eof()) break;
+        if (std::cin.eof())
+            break;
     }
     logFile << generateTimestamp() << " - Process " << pid << " exited." << std::endl;
 
@@ -350,7 +351,7 @@ void leaderProcess(int argc, char* argv[]) {
     unlockFile(lockFileDescriptor);
 }
 
-void childProcess(int argc, char* argv[]) {
+void childProcess(int argc, char *argv[]) {
     std::string name = argv[2];
     std::string logFilePath = argv[1];
     std::string lockFilePath = logFilePath + ".lock";
@@ -361,7 +362,7 @@ void childProcess(int argc, char* argv[]) {
     std::ofstream logFile;
     logFile.open(logFilePath, std::ios::app);
 
-    auto updateValue = [&](int64_t (*update_fun)(int64_t )) {
+    auto updateValue = [&](int64_t (*update_fun)(int64_t)) {
         int64_t value;
         {
             std::int64_t counter = loadCounterFromFile(counterFilePath);
@@ -375,7 +376,7 @@ void childProcess(int argc, char* argv[]) {
         updateValue([](int64_t v) { return v + 10; });
     } else {
         updateValue([](int64_t v) { return v * 2; });
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        std::this_thread::sleep_for(std::chrono::seconds(2));
         updateValue([](int64_t v) { return v / 2; });
     }
 }
